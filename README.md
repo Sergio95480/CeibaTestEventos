@@ -1,16 +1,26 @@
 # CeibaTestEventos
 
-API REST para la administración de **venues, eventos y reservas**.
+API REST para la gestión de eventos, lugares del evento y reservas.
 
-Proyecto desarrollado con **.NET 8**, aplicando principios de **Clean Architecture**, **Domain Driven Design (DDD)** y separación de responsabilidades por capas.
-
-El objetivo principal es implementar una solución mantenible, escalable y orientada al dominio, donde las reglas de negocio estén centralizadas y protegidas dentro de la capa Domain.
+Proyecto desarrollado con **.NET 8**, aplicando principios de **Arquitectura Limpia (Clean Architecture)**, **Diseño dirigido por dominio (DDD)** y separación de responsabilidades por capas.
 
 ---
 
-# Arquitectura
+# Demo desplegada
 
-La solución está organizada siguiendo el enfoque **Clean Architecture**:
+API disponible en:
+
+https://ceibatesteventos.onrender.com
+
+Documentación interactiva:
+
+https://ceibatesteventos.onrender.com/swagger
+
+---
+
+# Arquitectura del proyecto
+
+La solución está organizada siguiendo principios de Clean Architecture:
 
 ```
 CeibaTestEventos
@@ -18,17 +28,11 @@ CeibaTestEventos
 ├── src
 │   │
 │   ├── CeibaTestEventos.Domain
-│   │
 │   ├── CeibaTestEventos.Application
-│   │
 │   ├── CeibaTestEventos.Infrastructure
-│   │
 │   └── CeibaTestEventos.Api
 │
 └── tests
-    │
-    ├── CeibaTestEventos.UnitTests
-    │
     └── CeibaTestEventos.IntegrationTests
 ```
 
@@ -38,27 +42,23 @@ CeibaTestEventos
 
 ## Domain
 
-Contiene el núcleo del negocio.
+Contiene las reglas principales del negocio.
 
 Responsabilidades:
 
-- Entidades
-- Value Objects
-- Enumeraciones
-- Excepciones de dominio
-- Reglas de negocio
+* Entidades del dominio
+* Reglas de negocio
+* Estados del proceso
+* Excepciones de dominio
+* Validaciones
 
 Entidades principales:
 
-- Venue
-- Event
-- Reservation
+* Evento
+* Lugar del evento
+* Reserva
 
-Características:
-
-- Independiente de frameworks.
-- No depende de infraestructura.
-- Contiene las decisiones importantes del negocio.
+Esta capa no depende de frameworks externos.
 
 ---
 
@@ -66,218 +66,424 @@ Características:
 
 Contiene los casos de uso de la aplicación.
 
-Responsabilidades:
+Incluye:
 
-- Commands
-- Handlers
-- DTOs
-- Interfaces de repositorios
-- Orquestación de procesos
+* Comandos
+* Manejadores de casos de uso
+* DTOs
+* Interfaces de repositorios
 
 Patrones utilizados:
 
-- CQRS
-- Dependency Injection
+* CQRS
+* Inyección de dependencias
 
 ---
 
 ## Infrastructure
 
-Implementa los detalles técnicos.
+Implementa la parte técnica del sistema:
 
-Responsabilidades:
-
-- Entity Framework Core
-- PostgreSQL
-- Persistencia
-- Migraciones
-- Implementación de repositorios
+* Entity Framework Core
+* PostgreSQL
+* Migraciones
+* Persistencia
+* Implementación de repositorios
 
 ---
 
 ## API
 
-Capa de exposición HTTP.
+Capa encargada de exponer los servicios HTTP.
 
 Incluye:
 
-- Controllers REST
-- Swagger/OpenAPI
-- Configuración de servicios
-- Inyección de dependencias
-- Middleware global de excepciones
+* Controllers REST
+* Swagger/OpenAPI
+* Middleware global de excepciones
+* Configuración de servicios
 
 ---
 
 # Tecnologías utilizadas
 
-| Tecnología | Uso |
-|---|---|
-| .NET 8 | Framework principal |
-| ASP.NET Core Web API | API REST |
-| Entity Framework Core 8 | ORM |
-| PostgreSQL | Base de datos |
-| Docker | Contenedores |
-| Swagger | Documentación API |
-| xUnit | Pruebas automatizadas |
-| GitHub | Control de versiones |
+* .NET 8
+* ASP.NET Core Web API
+* Entity Framework Core 8
+* PostgreSQL
+* Docker
+* Swagger
+* xUnit
+* GitHub
+* Render Cloud
+
+---
+
+# Modelo funcional
+
+El sistema administra:
+
+```
+LUGAR DEL EVENTO
+        |
+        |
+     EVENTO
+        |
+        |
+     RESERVA
+```
+
+Flujo principal:
+
+```
+1. Crear lugar del evento
+          ↓
+2. Crear evento asociado
+          ↓
+3. Publicar evento
+          ↓
+4. Crear reserva
+          ↓
+5. Confirmar reserva
+          ↓
+6. Cancelar reserva
+          ↓
+7. Consultar reporte de ocupación
+```
 
 ---
 
 # Funcionalidades implementadas
 
-## Gestión de Venues
+# Gestión de lugares del evento
 
-Implementado:
+Permite registrar los espacios físicos donde se realizan eventos.
 
-✅ Crear venue  
-✅ Consultar venues  
-✅ Validación de datos obligatorios  
+Ejemplos:
+
+* Estadios
+* Teatros
+* Auditorios
+* Centros de convenciones
+
+## Crear lugar del evento
+
+Endpoint:
+
+```
+POST /api/Venues
+```
+
+Ejemplo:
+
+```json
+{
+  "nombre": "Movistar Arena",
+  "ciudad": "Bogotá",
+  "capacidad": 15000
+}
+```
+
+Respuesta:
+
+```json
+{
+  "id": "244d4087-998c-4b4a-98cf-a264d073c57e",
+  "nombre": "Movistar Arena",
+  "ciudad": "Bogotá",
+  "capacidad": 15000
+}
+```
 
 ---
 
-# Gestión de Eventos
+# Gestión de eventos
 
-Implementado:
+Permite crear y administrar eventos.
 
-✅ Crear eventos  
-✅ Consultar eventos  
-✅ Validación de capacidad del venue  
-✅ Validación de conflictos de horarios  
-✅ Publicación de eventos  
-✅ Completar eventos  
+## Crear evento
 
-
-Flujo de estados:
+Endpoint:
 
 ```
-Draft
-  |
-  | Publicar
-  v
-Published
-  |
-  | Completar
-  v
-Completed
+POST /api/Events
+```
+
+Ejemplo:
+
+```json
+{
+  "venueId": "244d4087-998c-4b4a-98cf-a264d073c57e",
+  "nombre": "Concierto Rock Bogotá",
+  "tipoEvento": 1,
+  "fechaInicio": "2026-08-15T20:00:00Z",
+  "fechaFin": "2026-08-15T23:00:00Z",
+  "precio": 85000,
+  "capacidad": 5000
+}
+```
+
+Respuesta:
+
+```json
+{
+  "id": "25d2d547-d12a-4bb3-aa97-2d4c7a286a4e",
+  "nombre": "Concierto Rock Bogotá",
+  "estado": 1
+}
 ```
 
 ---
 
-# Gestión de Reservas
+## Publicar evento
 
-Implementado:
-
-✅ Crear reserva  
-✅ Actualizar capacidad disponible del evento  
-✅ Confirmar reserva  
-✅ Generar código de confirmación  
-✅ Cancelar reserva  
-✅ Aplicar regla de cancelación tardía  
-
-
-Flujo normal:
+Permite cambiar el estado:
 
 ```
-Pending
-   |
-   | Confirmar
-   v
-Confirmed
+Draft → Published
 ```
 
-
-Cancelación con más de 48 horas:
-
-```
-Confirmed
-    |
-    v
-Cancelled
-```
-
-
-Cancelación con menos de 48 horas:
+Endpoint:
 
 ```
-Confirmed
-    |
-    v
-Lost
+POST /api/Events/{id}/publish
+```
+
+---
+
+## Completar evento
+
+Permite finalizar un evento publicado.
+
+Estado:
+
+```
+Published → Completed
+```
+
+Endpoint:
+
+```
+POST /api/Events/{id}/complete
+```
+
+---
+
+# Gestión de reservas
+
+Permite administrar la compra y cancelación de entradas.
+
+## Crear reserva
+
+Endpoint:
+
+```
+POST /api/Reservations
+```
+
+Ejemplo:
+
+```json
+{
+  "eventId": "25d2d547-d12a-4bb3-aa97-2d4c7a286a4e",
+  "compradorEmail": "cliente@test.com",
+  "cantidad": 2
+}
+```
+
+Respuesta:
+
+```json
+{
+  "id": "7c4ef35b-eff6-41ae-bc58-25688f2a471c",
+  "eventId": "25d2d547-d12a-4bb3-aa97-2d4c7a286a4e",
+  "cantidad": 2,
+  "estado": 2,
+  "codigoConfirmacion": "31B74208"
+}
+```
+
+---
+
+## Cancelar reserva
+
+Reglas aplicadas:
+
+### Cancelación normal
+
+Más de 48 horas antes:
+
+```
+Confirmed → Cancelled
+```
+
+### Cancelación tardía
+
+Menos de 48 horas:
+
+```
+Confirmed → Lost
+```
+
+Endpoint:
+
+```
+POST /api/Reservations/{id}/cancel
+```
+
+Respuesta:
+
+```json
+{
+  "id": "7c4ef35b-eff6-41ae-bc58-25688f2a471c",
+  "estado": 3
+}
+```
+
+---
+
+# Reporte de ocupación RF-06
+
+El sistema genera información consolidada por evento:
+
+Incluye:
+
+* Total entradas vendidas confirmadas
+* Entradas disponibles restantes
+* Porcentaje de ocupación
+* Total ingresos generados
+* Estado actual del evento
+
+Endpoint:
+
+```
+GET /api/Reports/events/{eventId}/occupation
+```
+
+Ejemplo respuesta:
+
+```json
+{
+  "eventId": "25d2d547-d12a-4bb3-aa97-2d4c7a286a4e",
+  "nombreEvento": "Concierto Rock Bogotá",
+  "entradasVendidas": 2,
+  "entradasDisponibles": 4998,
+  "porcentajeOcupacion": 0.04,
+  "ingresosTotales": 170000,
+  "estado": "Published"
+}
 ```
 
 ---
 
 # Reglas de negocio implementadas
 
-| Código | Regla |
-|---|---|
-| RN01 | Un evento no puede superar la capacidad disponible del venue |
-| RN02 | No pueden existir eventos activos con horarios superpuestos |
-| RN03 | Validaciones según tipo de evento |
-| RN04 | No se permiten reservas una hora antes del inicio del evento |
-| RN05 | Eventos superiores a $100 permiten máximo 10 entradas por transacción |
-| RN06 | Un evento publicado puede pasar al estado completado |
-| RN07 | Cancelaciones tardías se registran como perdidas |
+| Código | Regla                                                                          |
+| ------ | ------------------------------------------------------------------------------ |
+| RN01   | Un evento no puede superar la capacidad disponible del lugar                   |
+| RN02   | No pueden existir eventos activos con horarios superpuestos                    |
+| RN03   | Validaciones según tipo de evento                                              |
+| RN04   | No se permiten reservas una hora antes del inicio del evento                   |
+| RN05   | Eventos con precio superior a $100 permiten máximo 10 entradas por transacción |
+| RN06   | Un evento publicado puede pasar al estado completado                           |
+| RN07   | Cancelaciones tardías quedan registradas como perdidas                         |
 
 ---
 
-# Manejo global de excepciones
+# Pruebas automatizadas
 
-La aplicación cuenta con un middleware global para transformar excepciones de dominio en respuestas HTTP controladas.
+Ejecutar:
 
-Ejemplo de respuesta:
-
-```json
-{
-  "statusCode": 400,
-  "message": "El venue ya tiene un evento programado en ese horario."
-}
+```bash
+dotnet test tests/CeibaTestEventos.UnitTests
 ```
 
-Esto permite mantener respuestas consistentes para consumidores de la API.
+y
+
+```bash
+dotnet test tests/CeibaTestEventos.IntegrationTests
+```
+
+Resultado actual:
+
+```
+Unit Tests
+Total: 6
+Superados: 6
+Errores: 0
+
+
+Integration Tests
+Total: 3
+Superados: 3
+Errores: 0
+```
+
+Validaciones realizadas:
+
+✅ Creación de eventos
+✅ Creación de reservas
+✅ Confirmación de reservas
+✅ Cancelación normal
+✅ Cancelación tardía
+✅ Validación de capacidad
+✅ Reporte de ocupación
+
+---
+
+# Base de datos
+
+Motor utilizado:
+
+```
+PostgreSQL
+```
+
+Migración inicial:
+
+```
+InitialCreate
+```
+
+Tablas principales:
+
+```
+venues
+
+events
+
+reservations
+```
 
 ---
 
 # Ejecución local
 
-## Requisitos
+Requisitos:
 
-Instalar previamente:
+* .NET 8 SDK
+* Docker Desktop
+* PostgreSQL
 
-- .NET 8 SDK
-- Docker Desktop
-- PostgreSQL (opcional si no se utiliza Docker)
-
----
-
-# Clonar repositorio
+Clonar:
 
 ```bash
 git clone https://github.com/Sergio95480/CeibaTestEventos.git
-
-cd CeibaTestEventos
 ```
 
----
-
-# Restaurar dependencias
+Restaurar paquetes:
 
 ```bash
 dotnet restore
 ```
 
----
-
-# Ejecutar base de datos
+Ejecutar base de datos:
 
 ```bash
 docker-compose up -d
 ```
 
----
-
-# Aplicar migraciones
+Aplicar migraciones:
 
 ```bash
 dotnet ef database update \
@@ -285,15 +491,29 @@ dotnet ef database update \
 --startup-project src/CeibaTestEventos.Api
 ```
 
----
-
-# Ejecutar API
+Ejecutar API:
 
 ```bash
 dotnet run --project src/CeibaTestEventos.Api
 ```
 
-Swagger estará disponible en:
+---
+
+# Docker
+
+Construcción:
+
+```bash
+docker build -t ceiba-test-eventos .
+```
+
+Ejecución:
+
+```bash
+docker run -p 5180:8080 ceiba-test-eventos
+```
+
+Swagger:
 
 ```
 http://localhost:5180/swagger
@@ -301,224 +521,53 @@ http://localhost:5180/swagger
 
 ---
 
-# Pruebas automatizadas
+# Manejo de errores
 
-El proyecto cuenta con pruebas unitarias y pruebas de integración utilizando **xUnit**.
+La aplicación cuenta con middleware global de excepciones.
 
-Ejecutar todas las pruebas:
+Las reglas de dominio generan respuestas controladas:
 
-```bash
-dotnet test
+Ejemplo:
+
+```json
+{
+  "statusCode":400,
+  "message":"No existen suficientes entradas disponibles."
+}
 ```
 
 ---
 
-# Pruebas unitarias
-
-Ubicación:
-
-```
-tests/CeibaTestEventos.UnitTests
-```
-
-Validan reglas del dominio:
-
-✅ Publicación de eventos  
-✅ Validación de capacidad  
-✅ Restricción de reservas próximas al evento  
-✅ Restricción de cantidad de entradas según precio  
-✅ Confirmación de reservas  
-✅ Cancelación normal y tardía  
-
-
-Resultado actual:
-
-```
-Total: 6
-Superado: 6
-Error: 0
-```
-
----
-
-# Pruebas de integración
-
-Ubicación:
-
-```
-tests/CeibaTestEventos.IntegrationTests
-```
-
-Las pruebas utilizan `WebApplicationFactory` para validar flujos completos mediante HTTP.
-
-
-Escenarios implementados:
-
-## Crear evento
-
-Flujo:
-
-```
-Crear Venue
-      |
-Crear Event
-      |
-Validar HTTP 201
-```
-
-
-## Crear y confirmar reserva
-
-Flujo:
-
-```
-Crear Venue
-      |
-Crear Event
-      |
-Publicar Event
-      |
-Crear Reservation
-      |
-Confirmar Reservation
-```
-
-
-## Cancelar reserva tardía
-
-Flujo:
-
-```
-Crear Venue
-      |
-Crear Event
-      |
-Publicar Event
-      |
-Crear Reservation
-      |
-Confirmar Reservation
-      |
-Cancelar Reservation
-      |
-Validar estado Lost
-```
-
-
-Resultado actual:
-
-```
-Total: 3
-Superado: 3
-Error: 0
-```
-
----
-
-# Base de datos
-
-Motor:
-
-```
-PostgreSQL
-```
-
-Nombre:
-
-```
-CeibaTestEventos
-```
-
-Migraciones:
-
-```
-InitialCreate
-```
-
----
-
-# Endpoints principales
-
-## Venues
-
-```
-POST /api/Venues
-
-GET /api/Venues
-```
-
----
-
-## Events
-
-```
-POST /api/Events
-
-GET /api/Events
-
-POST /api/Events/{id}/publish
-
-POST /api/Events/{id}/complete
-```
-
----
-
-## Reservations
-
-```
-POST /api/Reservations
-
-POST /api/Reservations/{id}/confirm
-
-POST /api/Reservations/{id}/cancel
-```
-
----
-
-# Historia del proyecto
+# Historial del proyecto
 
 ## 9c52b56
 
 Creación inicial del proyecto con Clean Architecture y DDD.
 
----
-
 ## c11bdad
 
 Implementación de creación de reservas y actualización de capacidad del evento.
-
----
 
 ## 8a6e2b0
 
 Implementación del flujo de confirmación y cancelación de reservas.
 
----
-
 ## 97d5dcf
 
 Implementación de pruebas unitarias para reglas de negocio.
 
+## Actualización actual
+
+* Despliegue en Render
+* Base de datos PostgreSQL en nube
+* Pruebas de integración
+* Reporte de ocupación RF-06
+* Documentación completa de API
+
 ---
 
-## d4xxxxx
+# Autor
 
-Implementación de pruebas de integración para flujos completos de eventos y reservas.
+Sergio
 
----
-
-# Estado actual
-
-Proyecto funcional con:
-
-✅ Arquitectura Clean Architecture  
-✅ Dominio con reglas de negocio encapsuladas  
-✅ Persistencia PostgreSQL  
-✅ API REST documentada con Swagger  
-✅ Manejo global de excepciones  
-✅ Pruebas unitarias  
-✅ Pruebas de integración  
-
-Pendiente como diferenciador:
-
-- Despliegue en proveedor cloud con URL pública.
+Proyecto técnico desarrollado como prueba de arquitectura backend con .NET 8.
