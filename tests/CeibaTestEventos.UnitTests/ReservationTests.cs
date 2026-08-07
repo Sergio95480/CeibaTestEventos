@@ -60,6 +60,27 @@ public class ReservationTests
             reserva.Estado);
     }
 
+    [Fact]
+public void CrearReserva_EventoPrecioMayor100_MasDe10Entradas_LanzaExcepcion()
+{
+    var fechaActual = DateTime.UtcNow;
+
+
+    var exception = Assert.Throws<DomainException>(() =>
+        new Reservation(
+            Guid.NewGuid(),
+            Email.Create("cliente@test.com"),
+            11,
+            150,
+            fechaActual.AddDays(5),
+            fechaActual));
+
+
+    Assert.Equal(
+        "Los eventos superiores a $100 permiten máximo 10 entradas por transacción.",
+        exception.Message);
+}
+
 
     [Fact]
     public void CancelarReserva_ConMasDe48Horas_CambiaEstadoACancelled()
