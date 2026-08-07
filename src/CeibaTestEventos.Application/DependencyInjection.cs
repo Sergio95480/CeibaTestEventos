@@ -2,6 +2,7 @@ using CeibaTestEventos.Application.Features.Events.CreateEvent;
 using CeibaTestEventos.Application.Features.Reservations.CreateReservation;
 using CeibaTestEventos.Application.Features.Venues.CreateVenue;
 using CeibaTestEventos.Application.Features.Reservations.ConfirmReservation;
+using CeibaTestEventos.Application.Features.Reservations.CancelReservation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CeibaTestEventos.Application;
@@ -18,6 +19,8 @@ public static class DependencyInjection
         services.AddScoped<CreateReservationHandler>();
 
         services.AddScoped<ConfirmReservationHandler>();
+
+        services.AddScoped<CancelReservationHandler>();
 
         return services;
     }
