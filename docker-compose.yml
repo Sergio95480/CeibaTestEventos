@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ceibatesteventos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ceibatesteventos
+      POSTGRES_USER: ceiba_admin
+      POSTGRES_PASSWORD: ceiba_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ceibatesteventos_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  ceibatesteventos_postgres_data:
