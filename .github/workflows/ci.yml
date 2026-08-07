@@ -1,0 +1,61 @@
+name: CeibaTestEventos CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+
+jobs:
+
+  build-test:
+
+    runs-on: ubuntu-latest
+
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ceibatesteventos
+          POSTGRES_USER: ceiba_admin
+          POSTGRES_PASSWORD: ceiba_password
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+
+    steps:
+
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+
+      - name: Restaurar dependencias
+        run: dotnet restore
+
+
+      - name: Compilar solución
+        run: dotnet build --no-restore
+
+
+      - name: Ejecutar pruebas
+        env:
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=ceibatesteventos;Username=ceiba_admin;Password=ceiba_password
+        run: dotnet test

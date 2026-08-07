@@ -3,6 +3,8 @@ using CeibaTestEventos.Application.Features.Events.CreateEvent;
 using CeibaTestEventos.Application.Features.Events.PublishEvent;
 using CeibaTestEventos.Application.Interfaces;
 using CeibaTestEventos.Application.Features.Events.OccupationReport;
+using CeibaTestEventos.Application.Features.Events.GetEvents;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace CeibaTestEventos.Api.Controllers;
@@ -72,14 +74,17 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(
-        CancellationToken cancellationToken)
-    {
-        var events = await _eventRepository.GetAllAsync(
+public async Task<IActionResult> GetAll(
+    [FromQuery] EventFilterRequest filter,
+    CancellationToken cancellationToken)
+{
+    var events =
+        await _eventRepository.SearchAsync(
+            filter,
             cancellationToken);
 
-        return Ok(events);
-    }
+    return Ok(events);
+}
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(

@@ -1,6 +1,7 @@
 using CeibaTestEventos.Application.Interfaces;
 using CeibaTestEventos.Domain.Entities;
 using CeibaTestEventos.Infrastructure.Persistence;
+using CeibaTestEventos.Application.Features.Events.GetEvents;
 using Microsoft.EntityFrameworkCore;
 
 namespace CeibaTestEventos.Infrastructure.Repositories;
@@ -77,4 +78,65 @@ public sealed class EventRepository : IEventRepository
         await _context.SaveChangesAsync(
             cancellationToken);
     }
+
+public async Task<IReadOnlyList<Event>> SearchAsync(
+    EventFilterRequest filter,
+    CancellationToken cancellationToken)
+{
+    var query =
+        _context.Events.AsQueryable();
+
+
+    if(filter.TipoEvento.HasValue)
+    {
+        query = query.Where(x =>
+            x.TipoEvento == filter.TipoEvento);
+    }
+
+
+    if(filter.FechaDesde.HasValue)
+    {
+        query = query.Where(x =>
+            x.FechaInicio >= filter.FechaDesde);
+    }
+
+
+    if(filter.FechaHasta.HasValue)
+    {
+        query = query.Where(x =>
+            x.FechaInicio <= filter.FechaHasta);
+    }
+
+
+    if(filter.VenueId.HasValue)
+    {
+        query = query.Where(x =>
+            x.VenueId == filter.VenueId);
+    }
+
+
+    if(filter.Estado.HasValue)
+    {
+        query = query.Where(x =>
+            x.Estado == filter.Estado);
+    }
+
+
+    if(!string.IsNullOrWhiteSpace(filter.Titulo))
+    {
+        var titulo =
+            filter.Titulo.ToLower();
+
+
+        query = query.Where(x =>
+            x.Nombre
+            .ToLower()
+            .Contains(titulo));
+    }
+
+
+    return await query
+        .OrderBy(x => x.FechaInicio)
+        .ToListAsync(cancellationToken);
+}
 }

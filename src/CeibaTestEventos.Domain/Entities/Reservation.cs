@@ -35,7 +35,6 @@ public sealed class Reservation : Entity
             eventId,
             compradorEmail,
             cantidad,
-            precioEvento,
             fechaInicioEvento,
             fechaActual);
 
@@ -70,7 +69,8 @@ public sealed class Reservation : Entity
         }
 
 
-        var diferencia = fechaInicioEvento - fechaActual;
+        var diferencia =
+            fechaInicioEvento - fechaActual;
 
 
         Estado = diferencia.TotalHours < 48
@@ -83,7 +83,6 @@ public sealed class Reservation : Entity
         Guid eventId,
         Email compradorEmail,
         int cantidad,
-        decimal precioEvento,
         DateTime fechaInicioEvento,
         DateTime fechaActual)
     {
@@ -108,17 +107,22 @@ public sealed class Reservation : Entity
         }
 
 
-        if (fechaInicioEvento - fechaActual < TimeSpan.FromHours(1))
+        var tiempoRestante =
+            fechaInicioEvento - fechaActual;
+
+
+        if (tiempoRestante < TimeSpan.FromHours(1))
         {
             throw new DomainException(
                 "No se permiten reservas una hora antes del evento.");
         }
 
 
-        if (precioEvento > 100 && cantidad > 10)
+        if (tiempoRestante < TimeSpan.FromHours(24)
+            && cantidad > 5)
         {
             throw new DomainException(
-                "Los eventos superiores a $100 permiten máximo 10 entradas por transacción.");
+                "Cuando faltan menos de 24 horas para el evento se permiten máximo 5 entradas.");
         }
     }
 

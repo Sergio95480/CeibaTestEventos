@@ -1,3 +1,4 @@
+using CeibaTestEventos.Application.Features.Events.GetEvents;
 using CeibaTestEventos.Domain.Entities;
 
 namespace CeibaTestEventos.Application.Interfaces;
@@ -27,5 +28,10 @@ public interface IEventRepository
 
     Task UpdateAsync(
         Event evento,
+        CancellationToken cancellationToken);
+
+
+    Task<IReadOnlyList<Event>> SearchAsync(
+        EventFilterRequest filter,
         CancellationToken cancellationToken);
 }

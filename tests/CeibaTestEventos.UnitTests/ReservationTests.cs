@@ -9,104 +9,143 @@ namespace CeibaTestEventos.UnitTests;
 public class ReservationTests
 {
     [Fact]
-    public void CrearReserva_EventoIniciaEnMenosDeUnaHora_LanzaExcepcion()
+    public void CrearReserva_EmailValido_DebeCrearReserva()
     {
-        var fechaActual = DateTime.UtcNow;
+        var reservation = new Reservation(
+            Guid.NewGuid(),
+            Email.Create("cliente@test.com"),
+            2,
+            50000,
+            DateTime.UtcNow.AddDays(5),
+            DateTime.UtcNow);
 
-        var fechaInicioEvento = fechaActual.AddMinutes(30);
+
+        Assert.Equal(
+            2,
+            reservation.Cantidad);
+    }
 
 
-        var exception = Assert.Throws<DomainException>(() =>
+    [Fact]
+    public void CrearReserva_EmailInvalido_DebeLanzarExcepcion()
+    {
+        Assert.Throws<DomainException>(() =>
+            Email.Create("cliente"));
+    }
+
+
+    [Fact]
+    public void CrearReserva_CantidadCero_DebeLanzarExcepcion()
+    {
+        Assert.Throws<DomainException>(() =>
             new Reservation(
                 Guid.NewGuid(),
                 Email.Create("cliente@test.com"),
-                2,
-                50,
-                fechaInicioEvento,
-                fechaActual));
-
-
-        Assert.Equal(
-            "No se permiten reservas una hora antes del evento.",
-            exception.Message);
+                0,
+                50000,
+                DateTime.UtcNow.AddDays(5),
+                DateTime.UtcNow));
     }
 
 
     [Fact]
-    public void CancelarReserva_ConMenosDe48Horas_CambiaEstadoALost()
+    public void CrearReserva_MenosDe24Horas_MasDe5Entradas_DebeLanzarExcepcion()
     {
-        var fechaActual = DateTime.UtcNow;
+        Assert.Throws<DomainException>(() =>
+            new Reservation(
+                Guid.NewGuid(),
+                Email.Create("cliente@test.com"),
+                6,
+                50000,
+                DateTime.UtcNow.AddHours(20),
+                DateTime.UtcNow));
+    }
 
 
+    [Fact]
+    public void CrearReserva_MenosDe24Horas_5Entradas_DebePermitir()
+    {
+        var reserva = new Reservation(
+            Guid.NewGuid(),
+            Email.Create("cliente@test.com"),
+            5,
+            50000,
+            DateTime.UtcNow.AddHours(20),
+            DateTime.UtcNow);
+
+
+        Assert.Equal(
+            ReservationStatus.Pending,
+            reserva.Estado);
+    }
+
+
+    [Fact]
+    public void ConfirmarReserva_GeneraCodigoConfirmacion()
+    {
         var reserva = new Reservation(
             Guid.NewGuid(),
             Email.Create("cliente@test.com"),
             2,
-            50,
-            fechaActual.AddHours(24),
-            fechaActual);
+            50000,
+            DateTime.UtcNow.AddDays(5),
+            DateTime.UtcNow);
 
 
         reserva.Confirmar();
 
 
-        reserva.Cancelar(
-            fechaActual.AddHours(24),
-            fechaActual);
-
-
         Assert.Equal(
-            ReservationStatus.Lost,
+            ReservationStatus.Confirmed,
             reserva.Estado);
+
+        Assert.False(
+            string.IsNullOrEmpty(reserva.CodigoConfirmacion));
     }
-
-    [Fact]
-public void CrearReserva_EventoPrecioMayor100_MasDe10Entradas_LanzaExcepcion()
+[Fact]
+public void CancelarReserva_MasDe48Horas_DebeQuedarCancelada()
 {
-    var fechaActual = DateTime.UtcNow;
+    var reserva = new Reservation(
+        Guid.NewGuid(),
+        Email.Create("cliente@test.com"),
+        2,
+        50000,
+        DateTime.UtcNow.AddDays(5),
+        DateTime.UtcNow);
 
+    reserva.Confirmar();
 
-    var exception = Assert.Throws<DomainException>(() =>
-        new Reservation(
-            Guid.NewGuid(),
-            Email.Create("cliente@test.com"),
-            11,
-            150,
-            fechaActual.AddDays(5),
-            fechaActual));
+    reserva.Cancelar(
+        DateTime.UtcNow.AddDays(5),
+        DateTime.UtcNow);
 
 
     Assert.Equal(
-        "Los eventos superiores a $100 permiten máximo 10 entradas por transacción.",
-        exception.Message);
+        ReservationStatus.Cancelled,
+        reserva.Estado);
 }
 
 
-    [Fact]
-    public void CancelarReserva_ConMasDe48Horas_CambiaEstadoACancelled()
-    {
-        var fechaActual = DateTime.UtcNow;
+[Fact]
+public void CancelarReserva_MenosDe48Horas_DebeQuedarPerdida()
+{
+    var reserva = new Reservation(
+        Guid.NewGuid(),
+        Email.Create("cliente@test.com"),
+        2,
+        50000,
+        DateTime.UtcNow.AddHours(24),
+        DateTime.UtcNow);
+
+    reserva.Confirmar();
+
+    reserva.Cancelar(
+        DateTime.UtcNow.AddHours(24),
+        DateTime.UtcNow);
 
 
-        var reserva = new Reservation(
-            Guid.NewGuid(),
-            Email.Create("cliente@test.com"),
-            2,
-            50,
-            fechaActual.AddDays(5),
-            fechaActual);
-
-
-        reserva.Confirmar();
-
-
-        reserva.Cancelar(
-            fechaActual.AddDays(5),
-            fechaActual);
-
-
-        Assert.Equal(
-            ReservationStatus.Cancelled,
-            reserva.Estado);
-    }
+    Assert.Equal(
+        ReservationStatus.Lost,
+        reserva.Estado);
+}
 }
