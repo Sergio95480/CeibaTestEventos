@@ -2,6 +2,7 @@ using CeibaTestEventos.Application.Features.Events.CompleteEvent;
 using CeibaTestEventos.Application.Features.Events.CreateEvent;
 using CeibaTestEventos.Application.Features.Events.PublishEvent;
 using CeibaTestEventos.Application.Interfaces;
+using CeibaTestEventos.Application.Features.Events.OccupationReport;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CeibaTestEventos.Api.Controllers;
@@ -15,16 +16,20 @@ public sealed class EventsController : ControllerBase
     private readonly CompleteEventHandler _completeHandler;
     private readonly IEventRepository _eventRepository;
 
+    private readonly GetOccupationReportHandler _occupationReportHandler;
+
     public EventsController(
         CreateEventHandler createHandler,
         PublishEventHandler publishHandler,
         CompleteEventHandler completeHandler,
-        IEventRepository eventRepository)
+        IEventRepository eventRepository,
+        GetOccupationReportHandler occupationReportHandler)
     {
         _createHandler = createHandler;
         _publishHandler = publishHandler;
         _completeHandler = completeHandler;
         _eventRepository = eventRepository;
+        _occupationReportHandler = occupationReportHandler;
     }
 
     [HttpPost]
@@ -92,4 +97,17 @@ public sealed class EventsController : ControllerBase
 
         return Ok(evento);
     }
+
+    [HttpGet("{id:guid}/occupation-report")]
+public async Task<IActionResult> OccupationReport(
+    Guid id,
+    CancellationToken cancellationToken)
+{
+    var result =
+        await _occupationReportHandler.Handle(
+            new GetOccupationReportQuery(id),
+            cancellationToken);
+
+    return Ok(result);
+}
 }

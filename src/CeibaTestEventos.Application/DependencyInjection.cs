@@ -5,6 +5,8 @@ using CeibaTestEventos.Application.Features.Reservations.ConfirmReservation;
 using CeibaTestEventos.Application.Features.Reservations.CancelReservation;
 using CeibaTestEventos.Application.Features.Events.CompleteEvent;
 using CeibaTestEventos.Application.Features.Events.PublishEvent;
+using CeibaTestEventos.Application.Features.Events.OccupationReport;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CeibaTestEventos.Application;
@@ -27,6 +29,8 @@ public static class DependencyInjection
         services.AddScoped<CompleteEventHandler>();
 
         services.AddScoped<PublishEventHandler>();
+
+	services.AddScoped<GetOccupationReportHandler>();
 
         return services;
     }
