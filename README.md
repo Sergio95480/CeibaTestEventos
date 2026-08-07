@@ -1,30 +1,41 @@
 # CeibaTestEventos
 
-API REST para administración de eventos, venues y reservas.
+API REST para la administración de eventos, lugares (venues) y reservas.
 
-Proyecto desarrollado con .NET 8 aplicando Clean Architecture, Domain Driven Design y separación por capas.
+Proyecto desarrollado con **.NET 8** aplicando **Clean Architecture**, **Domain Driven Design (DDD)** y separación de responsabilidades por capas.
 
 ---
 
 # Arquitectura
 
-La solución está organizada en:
+La solución está organizada siguiendo principios de Clean Architecture:
 
 
-src
+CeibaTestEventos
+│
+├── src
+│
 ├── CeibaTestEventos.Domain
 ├── CeibaTestEventos.Application
 ├── CeibaTestEventos.Infrastructure
 └── CeibaTestEventos.Api
+│
+└── tests
+└── CeibaTestEventos.UnitTests
 
+
+---
+
+# Descripción de capas
 
 ## Domain
 
-Contiene:
+Contiene la lógica principal del negocio:
 
 - Entidades
-- Value Objects
+- Objetos de valor (Value Objects)
 - Enumeraciones
+- Excepciones de dominio
 - Reglas de negocio
 
 Entidades principales:
@@ -33,141 +44,242 @@ Entidades principales:
 - Event
 - Reservation
 
+Esta capa es independiente de frameworks y tecnologías externas.
+
+---
 
 ## Application
 
-Contiene los casos de uso:
+Contiene los casos de uso de la aplicación:
 
 - Commands
 - Handlers
+- DTOs
 - Interfaces de repositorios
 
-Patrón utilizado:
+Patrones utilizados:
 
 - CQRS
+- Inyección de dependencias
 
+---
 
 ## Infrastructure
 
-Responsable de:
+Responsable de la implementación técnica:
 
 - Entity Framework Core
 - PostgreSQL
-- Persistencia
+- Persistencia de datos
+- Migraciones
 - Implementación de repositorios
 
+---
 
 ## API
 
-ASP.NET Core Web API:
+Capa de exposición HTTP:
 
 - Controllers
-- Swagger
-- Dependency Injection
+- Swagger/OpenAPI
+- Configuración de servicios
+- Manejo global de excepciones
 
 ---
 
-# Tecnologías
+# Tecnologías utilizadas
 
 - .NET 8
 - ASP.NET Core Web API
-- Entity Framework Core 8.0.8
+- Entity Framework Core 8
 - PostgreSQL
-- Swagger
 - Docker
+- Swagger
+- xUnit
+- GitHub
+
+---
+
+# Funcionalidades implementadas
+
+## Gestión de Venues
+
+✅ Crear venue  
+✅ Consultar venues  
+
+---
+
+## Gestión de Eventos
+
+✅ Crear eventos  
+✅ Consultar eventos  
+✅ Validar capacidad del venue  
+✅ Validar conflictos de horarios  
+✅ Publicar eventos  
+✅ Completar eventos  
+
+Flujo de estados:
 
 
-# Estado del proyecto
-
-## Implementado
-
-✅ Crear Venue  
-✅ Consultar Venues  
-✅ Crear Event  
-✅ Validación capacidad Venue  
-✅ Validación conflictos de horarios  
-✅ Validaciones de dominio  
-✅ Persistencia PostgreSQL  
-✅ Migraciones EF Core  
+Draft
+|
+| Publicar
+v
+Published
+|
+| Completar
+v
+Completed
 
 
-## En desarrollo
+---
 
-🚧 API de Reservations
+## Gestión de Reservas
 
-Pendiente:
+✅ Crear reserva  
+✅ Confirmar reserva  
+✅ Generar código de confirmación  
+✅ Cancelar reserva  
+✅ Aplicar penalización por cancelación tardía  
 
-- Crear reserva
-- Confirmar reserva
-- Cancelar reserva
-- Código de confirmación
+Flujo de reserva:
 
 
-# Reglas de negocio
+Pending
+|
+Confirmar
+|
+Confirmed
+
+
+Cancelación:
+
+Más de 48 horas antes del evento:
+
+
+Confirmed
+|
+Cancelled
+
+
+Menos de 48 horas antes del evento:
+
+
+Confirmed
+|
+Lost
+
+
+---
+
+# Reglas de negocio implementadas
 
 | Código | Regla |
 |---|---|
-| RN01 | Evento no puede superar capacidad del venue |
+| RN01 | Un evento no puede superar la capacidad disponible del venue |
 | RN02 | No pueden existir eventos activos con horarios superpuestos |
-| RN03 | Eventos weekend no pueden iniciar después de las 22:00 |
-| RN04 | No reservas una hora antes del evento |
-| RN05 | Eventos > $100 máximo 10 entradas |
-| RN06 | Evento pasa a completado después de su fecha fin |
-| RN07 | Cancelaciones tardías se registran como perdidas |
-
-
-# Ejecución
-
-Restaurar paquetes:
-
-
-dotnet restore
-
-
-Compilar:
-
-
-dotnet build
-
-
-Ejecutar API:
-
-
-dotnet run --project src/CeibaTestEventos.Api
-
-
-Swagger disponible en:
-
-
-/swagger
-
+| RN03 | Validaciones según tipo de evento |
+| RN04 | No se permiten reservas una hora antes del inicio del evento |
+| RN05 | Eventos con precio superior a $100 permiten máximo 10 entradas por transacción |
+| RN06 | Un evento publicado puede pasar al estado completado |
+| RN07 | Las cancelaciones tardías se registran como perdidas |
 
 ---
 
-# Base de datos
+# Ejecución local
 
-Motor:
+## Requisitos
+
+Instalar previamente:
+
+- .NET 8 SDK
+- Docker Desktop
+- PostgreSQL (o ejecutarlo mediante Docker)
+
+---
+
+## Clonar repositorio
+
+```bash
+git clone https://github.com/Sergio95480/CeibaTestEventos.git
+
+cd CeibaTestEventos
+Restaurar dependencias
+dotnet restore
+Ejecutar base de datos
+docker-compose up -d
+Aplicar migraciones
+dotnet ef database update \
+--project src/CeibaTestEventos.Infrastructure \
+--startup-project src/CeibaTestEventos.Api
+Ejecutar API
+dotnet run --project src/CeibaTestEventos.Api
+
+Swagger estará disponible en:
+
+http://localhost:5180/swagger
+Pruebas automatizadas
+
+Ejecutar:
+
+dotnet test tests/CeibaTestEventos.UnitTests
+
+Actualmente se validan las principales reglas de negocio:
+
+✅ Publicación de eventos
+✅ Validación de capacidad
+✅ Restricción de reservas próximas al evento
+✅ Cancelación normal de reservas
+✅ Cancelación tardía con estado perdido
+✅ Restricción de cantidad de entradas según precio
+
+Resultado actual:
+
+Total: 6
+Superado: 6
+Error: 0
+Base de datos
+
+Motor utilizado:
 
 PostgreSQL
 
-Database:
-
-
-CeibaTestEventos
-
-
 Migraciones:
 
-
 InitialCreate
+Manejo de excepciones
+
+La aplicación cuenta con manejo global de excepciones.
+
+Las excepciones de dominio son transformadas en respuestas HTTP controladas.
+
+Ejemplo:
+
+{
+  "statusCode": 400,
+  "message": "El venue ya tiene un evento programado en ese horario."
+}
+Historia del proyecto
+9c52b56
+
+Creación inicial del proyecto con Clean Architecture y DDD.
+
+c11bdad
+
+Implementación de creación de reservas y actualización de capacidad del evento.
+
+8a6e2b0
+
+Implementación del flujo de confirmación y cancelación de reservas.
+
+97d5dcf
+
+Implementación de pruebas unitarias para reglas de negocio.
 
 
----
+Después ejecuta:
 
-# Historia del proyecto
-
-## 9c52b56
-
-Initial project Ceiba setup with Clean Architecture and DDD
-
-Base arquitectónica y dominio inicial.
+```powershell
+git add README.md
+git commit -m "Actualizar README con documentación completa del proyecto"
+git push
