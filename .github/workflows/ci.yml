@@ -20,6 +20,7 @@ jobs:
     services:
       postgres:
         image: postgres:16
+
         env:
           POSTGRES_DB: ceibatesteventos
           POSTGRES_USER: ceiba_admin
@@ -55,7 +56,22 @@ jobs:
         run: dotnet build --no-restore
 
 
+      - name: Instalar Entity Framework CLI
+        run: dotnet tool install --global dotnet-ef
+
+
+      - name: Aplicar migraciones EF Core
+        env:
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=ceibatesteventos;Username=ceiba_admin;Password=ceiba_password
+
+        run: |
+          dotnet ef database update \
+          --project src/CeibaTestEventos.Infrastructure \
+          --startup-project src/CeibaTestEventos.Api
+
+
       - name: Ejecutar pruebas
         env:
           ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=ceibatesteventos;Username=ceiba_admin;Password=ceiba_password
+
         run: dotnet test
