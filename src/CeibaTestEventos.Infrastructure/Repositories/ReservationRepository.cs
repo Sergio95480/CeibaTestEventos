@@ -9,7 +9,6 @@ public sealed class ReservationRepository : IReservationRepository
 {
     private readonly AppDbContext _context;
 
-
     public ReservationRepository(
         AppDbContext context)
     {
@@ -46,6 +45,9 @@ public sealed class ReservationRepository : IReservationRepository
         await _context.Reservations.AddAsync(
             reservation,
             cancellationToken);
+
+        await _context.SaveChangesAsync(
+            cancellationToken);
     }
 
 
@@ -55,7 +57,8 @@ public sealed class ReservationRepository : IReservationRepository
     {
         _context.Reservations.Update(reservation);
 
-        await Task.CompletedTask;
+        await _context.SaveChangesAsync(
+            cancellationToken);
     }
 
 
