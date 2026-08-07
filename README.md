@@ -1,28 +1,36 @@
 # CeibaTestEventos
 
-API REST para la administración de eventos, lugares (venues) y reservas.
+API REST para la administración de **venues, eventos y reservas**.
 
-Proyecto desarrollado con **.NET 8** aplicando **Clean Architecture**, **Domain Driven Design (DDD)** y separación de responsabilidades por capas.
+Proyecto desarrollado con **.NET 8**, aplicando principios de **Clean Architecture**, **Domain Driven Design (DDD)** y separación de responsabilidades por capas.
+
+El objetivo principal es implementar una solución mantenible, escalable y orientada al dominio, donde las reglas de negocio estén centralizadas y protegidas dentro de la capa Domain.
 
 ---
 
 # Arquitectura
 
-La solución está organizada siguiendo principios de Clean Architecture:
+La solución está organizada siguiendo el enfoque **Clean Architecture**:
 
-
+```
 CeibaTestEventos
 │
 ├── src
-│
-├── CeibaTestEventos.Domain
-├── CeibaTestEventos.Application
-├── CeibaTestEventos.Infrastructure
-└── CeibaTestEventos.Api
+│   │
+│   ├── CeibaTestEventos.Domain
+│   │
+│   ├── CeibaTestEventos.Application
+│   │
+│   ├── CeibaTestEventos.Infrastructure
+│   │
+│   └── CeibaTestEventos.Api
 │
 └── tests
-└── CeibaTestEventos.UnitTests
-
+    │
+    ├── CeibaTestEventos.UnitTests
+    │
+    └── CeibaTestEventos.IntegrationTests
+```
 
 ---
 
@@ -30,10 +38,12 @@ CeibaTestEventos
 
 ## Domain
 
-Contiene la lógica principal del negocio:
+Contiene el núcleo del negocio.
+
+Responsabilidades:
 
 - Entidades
-- Objetos de valor (Value Objects)
+- Value Objects
 - Enumeraciones
 - Excepciones de dominio
 - Reglas de negocio
@@ -44,33 +54,42 @@ Entidades principales:
 - Event
 - Reservation
 
-Esta capa es independiente de frameworks y tecnologías externas.
+Características:
+
+- Independiente de frameworks.
+- No depende de infraestructura.
+- Contiene las decisiones importantes del negocio.
 
 ---
 
 ## Application
 
-Contiene los casos de uso de la aplicación:
+Contiene los casos de uso de la aplicación.
+
+Responsabilidades:
 
 - Commands
 - Handlers
 - DTOs
 - Interfaces de repositorios
+- Orquestación de procesos
 
 Patrones utilizados:
 
 - CQRS
-- Inyección de dependencias
+- Dependency Injection
 
 ---
 
 ## Infrastructure
 
-Responsable de la implementación técnica:
+Implementa los detalles técnicos.
+
+Responsabilidades:
 
 - Entity Framework Core
 - PostgreSQL
-- Persistencia de datos
+- Persistencia
 - Migraciones
 - Implementación de repositorios
 
@@ -78,25 +97,30 @@ Responsable de la implementación técnica:
 
 ## API
 
-Capa de exposición HTTP:
+Capa de exposición HTTP.
 
-- Controllers
+Incluye:
+
+- Controllers REST
 - Swagger/OpenAPI
 - Configuración de servicios
-- Manejo global de excepciones
+- Inyección de dependencias
+- Middleware global de excepciones
 
 ---
 
 # Tecnologías utilizadas
 
-- .NET 8
-- ASP.NET Core Web API
-- Entity Framework Core 8
-- PostgreSQL
-- Docker
-- Swagger
-- xUnit
-- GitHub
+| Tecnología | Uso |
+|---|---|
+| .NET 8 | Framework principal |
+| ASP.NET Core Web API | API REST |
+| Entity Framework Core 8 | ORM |
+| PostgreSQL | Base de datos |
+| Docker | Contenedores |
+| Swagger | Documentación API |
+| xUnit | Pruebas automatizadas |
+| GitHub | Control de versiones |
 
 ---
 
@@ -104,71 +128,83 @@ Capa de exposición HTTP:
 
 ## Gestión de Venues
 
+Implementado:
+
 ✅ Crear venue  
 ✅ Consultar venues  
+✅ Validación de datos obligatorios  
 
 ---
 
-## Gestión de Eventos
+# Gestión de Eventos
+
+Implementado:
 
 ✅ Crear eventos  
 ✅ Consultar eventos  
-✅ Validar capacidad del venue  
-✅ Validar conflictos de horarios  
-✅ Publicar eventos  
+✅ Validación de capacidad del venue  
+✅ Validación de conflictos de horarios  
+✅ Publicación de eventos  
 ✅ Completar eventos  
+
 
 Flujo de estados:
 
-
+```
 Draft
-|
-| Publicar
-v
+  |
+  | Publicar
+  v
 Published
-|
-| Completar
-v
+  |
+  | Completar
+  v
 Completed
-
+```
 
 ---
 
-## Gestión de Reservas
+# Gestión de Reservas
+
+Implementado:
 
 ✅ Crear reserva  
+✅ Actualizar capacidad disponible del evento  
 ✅ Confirmar reserva  
 ✅ Generar código de confirmación  
 ✅ Cancelar reserva  
-✅ Aplicar penalización por cancelación tardía  
-
-Flujo de reserva:
+✅ Aplicar regla de cancelación tardía  
 
 
+Flujo normal:
+
+```
 Pending
-|
-Confirmar
-|
+   |
+   | Confirmar
+   v
 Confirmed
+```
 
 
-Cancelación:
+Cancelación con más de 48 horas:
 
-Más de 48 horas antes del evento:
-
-
+```
 Confirmed
-|
+    |
+    v
 Cancelled
+```
 
 
-Menos de 48 horas antes del evento:
+Cancelación con menos de 48 horas:
 
-
+```
 Confirmed
-|
+    |
+    v
 Lost
-
+```
 
 ---
 
@@ -180,9 +216,26 @@ Lost
 | RN02 | No pueden existir eventos activos con horarios superpuestos |
 | RN03 | Validaciones según tipo de evento |
 | RN04 | No se permiten reservas una hora antes del inicio del evento |
-| RN05 | Eventos con precio superior a $100 permiten máximo 10 entradas por transacción |
+| RN05 | Eventos superiores a $100 permiten máximo 10 entradas por transacción |
 | RN06 | Un evento publicado puede pasar al estado completado |
-| RN07 | Las cancelaciones tardías se registran como perdidas |
+| RN07 | Cancelaciones tardías se registran como perdidas |
+
+---
+
+# Manejo global de excepciones
+
+La aplicación cuenta con un middleware global para transformar excepciones de dominio en respuestas HTTP controladas.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "statusCode": 400,
+  "message": "El venue ya tiene un evento programado en ese horario."
+}
+```
+
+Esto permite mantener respuestas consistentes para consumidores de la API.
 
 ---
 
@@ -194,92 +247,278 @@ Instalar previamente:
 
 - .NET 8 SDK
 - Docker Desktop
-- PostgreSQL (o ejecutarlo mediante Docker)
+- PostgreSQL (opcional si no se utiliza Docker)
 
 ---
 
-## Clonar repositorio
+# Clonar repositorio
 
 ```bash
 git clone https://github.com/Sergio95480/CeibaTestEventos.git
 
 cd CeibaTestEventos
-Restaurar dependencias
+```
+
+---
+
+# Restaurar dependencias
+
+```bash
 dotnet restore
-Ejecutar base de datos
+```
+
+---
+
+# Ejecutar base de datos
+
+```bash
 docker-compose up -d
-Aplicar migraciones
+```
+
+---
+
+# Aplicar migraciones
+
+```bash
 dotnet ef database update \
 --project src/CeibaTestEventos.Infrastructure \
 --startup-project src/CeibaTestEventos.Api
-Ejecutar API
+```
+
+---
+
+# Ejecutar API
+
+```bash
 dotnet run --project src/CeibaTestEventos.Api
+```
 
 Swagger estará disponible en:
 
+```
 http://localhost:5180/swagger
-Pruebas automatizadas
+```
 
-Ejecutar:
+---
 
-dotnet test tests/CeibaTestEventos.UnitTests
+# Pruebas automatizadas
 
-Actualmente se validan las principales reglas de negocio:
+El proyecto cuenta con pruebas unitarias y pruebas de integración utilizando **xUnit**.
 
-✅ Publicación de eventos
-✅ Validación de capacidad
-✅ Restricción de reservas próximas al evento
-✅ Cancelación normal de reservas
-✅ Cancelación tardía con estado perdido
-✅ Restricción de cantidad de entradas según precio
+Ejecutar todas las pruebas:
+
+```bash
+dotnet test
+```
+
+---
+
+# Pruebas unitarias
+
+Ubicación:
+
+```
+tests/CeibaTestEventos.UnitTests
+```
+
+Validan reglas del dominio:
+
+✅ Publicación de eventos  
+✅ Validación de capacidad  
+✅ Restricción de reservas próximas al evento  
+✅ Restricción de cantidad de entradas según precio  
+✅ Confirmación de reservas  
+✅ Cancelación normal y tardía  
+
 
 Resultado actual:
 
+```
 Total: 6
 Superado: 6
 Error: 0
-Base de datos
+```
 
-Motor utilizado:
+---
 
+# Pruebas de integración
+
+Ubicación:
+
+```
+tests/CeibaTestEventos.IntegrationTests
+```
+
+Las pruebas utilizan `WebApplicationFactory` para validar flujos completos mediante HTTP.
+
+
+Escenarios implementados:
+
+## Crear evento
+
+Flujo:
+
+```
+Crear Venue
+      |
+Crear Event
+      |
+Validar HTTP 201
+```
+
+
+## Crear y confirmar reserva
+
+Flujo:
+
+```
+Crear Venue
+      |
+Crear Event
+      |
+Publicar Event
+      |
+Crear Reservation
+      |
+Confirmar Reservation
+```
+
+
+## Cancelar reserva tardía
+
+Flujo:
+
+```
+Crear Venue
+      |
+Crear Event
+      |
+Publicar Event
+      |
+Crear Reservation
+      |
+Confirmar Reservation
+      |
+Cancelar Reservation
+      |
+Validar estado Lost
+```
+
+
+Resultado actual:
+
+```
+Total: 3
+Superado: 3
+Error: 0
+```
+
+---
+
+# Base de datos
+
+Motor:
+
+```
 PostgreSQL
+```
+
+Nombre:
+
+```
+CeibaTestEventos
+```
 
 Migraciones:
 
+```
 InitialCreate
-Manejo de excepciones
+```
 
-La aplicación cuenta con manejo global de excepciones.
+---
 
-Las excepciones de dominio son transformadas en respuestas HTTP controladas.
+# Endpoints principales
 
-Ejemplo:
+## Venues
 
-{
-  "statusCode": 400,
-  "message": "El venue ya tiene un evento programado en ese horario."
-}
-Historia del proyecto
-9c52b56
+```
+POST /api/Venues
+
+GET /api/Venues
+```
+
+---
+
+## Events
+
+```
+POST /api/Events
+
+GET /api/Events
+
+POST /api/Events/{id}/publish
+
+POST /api/Events/{id}/complete
+```
+
+---
+
+## Reservations
+
+```
+POST /api/Reservations
+
+POST /api/Reservations/{id}/confirm
+
+POST /api/Reservations/{id}/cancel
+```
+
+---
+
+# Historia del proyecto
+
+## 9c52b56
 
 Creación inicial del proyecto con Clean Architecture y DDD.
 
-c11bdad
+---
+
+## c11bdad
 
 Implementación de creación de reservas y actualización de capacidad del evento.
 
-8a6e2b0
+---
+
+## 8a6e2b0
 
 Implementación del flujo de confirmación y cancelación de reservas.
 
-97d5dcf
+---
+
+## 97d5dcf
 
 Implementación de pruebas unitarias para reglas de negocio.
 
+---
 
-Después ejecuta:
+## d4xxxxx
 
-```powershell
-git add README.md
-git commit -m "Actualizar README con documentación completa del proyecto"
-git push
+Implementación de pruebas de integración para flujos completos de eventos y reservas.
+
+---
+
+# Estado actual
+
+Proyecto funcional con:
+
+✅ Arquitectura Clean Architecture  
+✅ Dominio con reglas de negocio encapsuladas  
+✅ Persistencia PostgreSQL  
+✅ API REST documentada con Swagger  
+✅ Manejo global de excepciones  
+✅ Pruebas unitarias  
+✅ Pruebas de integración  
+
+Pendiente como diferenciador:
+
+- Despliegue en proveedor cloud con URL pública.
